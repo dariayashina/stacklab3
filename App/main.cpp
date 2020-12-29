@@ -1,4 +1,4 @@
-#include "Stack.h"
+#include "..\Stack\Stack.h"
 #include "Calculator.h"
 
 using namespace std;
