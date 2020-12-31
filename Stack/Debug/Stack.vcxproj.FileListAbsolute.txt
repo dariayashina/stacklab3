@@ -1,2 +1,0 @@
-C:\Users\Nick\source\repos\Stack\Debug\Stack.pdb
-C:\Users\Nick\source\repos\Stack\Stack\Debug\Stack.pdb
