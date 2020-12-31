@@ -1,0 +1,3 @@
+﻿  test_calc.cpp
+C:\Users\Stepan\Desktop\stacklab3\App\Calculator.h(117,1): warning C4267: =: преобразование из "size_t" в "int"; возможна потеря данных
+  gtest.vcxproj -> C:\Users\Stepan\Desktop\stacklab3\x64\Debug\Tests.exe

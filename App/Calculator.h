@@ -1,204 +1,150 @@
 #pragma once
-#include "..\Stack\Stack.h"
-#include <iostream>
+#include "Stack.h"
 #include <string>
-class Calculator
+
+using namespace std;
+
+class TCalculator
 {
-	std::string infix;
-	std::string postfix;
-	TStack<char> st_c;
-	TStack<double> st_d;
-	void ToPostfix();
-	bool CheckBrackets();
+private:
+	string infix;// Строка в инфиксной записи
+	string postfix; //Строка в постфиксной записи
+	TStack<char> st;
+
+	TStack<double> st2;
+	int Priority(char elem)
+	{
+		switch (elem)
+		{
+		case 's':
+		case '(':
+		case ')':return 1;
+		case '+':
+		case '-':return 2;
+		case '*':
+		case '/':return 3;
+		default: throw elem;
+		}
+	}
 public:
-	void SetFormula(std::string str);
-	double res();
-};
-
-int Priority(char c)
-{
-	switch (c)
+	TCalculator() : st(100), st2(200)
 	{
-	case'+': return 2;
-	case'-': return 2;
-	case'*': return 3;
-	case'/': return 3;
-	case'(':return 1;
-	case')':return 1;
-	case'^':return 4;
-	case's':return 1;
-	case'c':return 1;
-	case'l':return 1;
-	case'e':return 1;
-	default: return 0;
+		infix = "";
+		postfix = "";
 	}
-}
-void Calculator::SetFormula(std::string str)
-{
-	infix = " ";
-	for (unsigned int i = 0; i < str.size(); i++)
+	string GetExpression()
 	{
-		if (str[i] == 's' || str[i] == 'c' || str[i] == 'e' || str[i] == 'l')
-		{
-			infix += " ";
-			infix += str[i];
-			i += 3;
-			if (i >= str.size() - 2)
-				throw 0;
-		}
-		else
-		{
-			if (Priority(str[i]) != 0)
-				infix += " ";
-			infix += str[i];
-		}
-
+		return infix;
 	}
-	infix += ' ';
-	if (CheckBrackets() != true)
-		throw 0;
-
-	TStack<char> c(infix.size());
-	TStack<double> d(infix.size());
-	st_c = c;
-	st_d = d;
-}
-bool Calculator::CheckBrackets()
-{
-	st_c.clear();
-	st_d.clear();
-	for (int i = 0; i < infix.size(); i++)
+	void SetExpression(string expr)
 	{
-		if (infix[i] == '(' || infix[i] == 's' || infix[i] == 'c' || infix[i] == 'e' || infix[i] == 'l')
-			st_c.push(infix[i]);
-		if (infix[i] == ')')
-		{
-			if (st_c.IsEmpty() == true)
-				return false;
-			st_c.pop();
-		}
+		infix = expr;
 	}
-	return st_c.IsEmpty();
-}
-void Calculator::ToPostfix()
-{
-	st_c.clear();
-	st_d.clear();
-	postfix = "";
-	std::string tmp = "(" + infix + ")";
-	for (unsigned int i = 0; i < tmp.size(); i++)
+	string GetPostfix()
 	{
-		if (Priority(tmp[i]) == 0)
-			postfix += tmp[i];
-		else
+		return postfix;
+	}
+	//Перевод выражения из инфиксной в постфиксную форму
+	void ToPostfix()
+	{
+		postfix = "";
+		string src = "(" + infix + ")";
+		char elem = '!';
+		unsigned int i = 0;
+		st.clear();
+		while (i < src.size())
 		{
-			if (tmp[i] == '(' || tmp[i] == 's' || tmp[i] == 'c' || tmp[i] == 'l' || tmp[i] == 'e')
-				st_c.push(tmp[i]);
-			else
+			if (src[i] == '+' || src[i] == '-' || src[i] == '*' || src[i] == '/')
 			{
-				if (tmp[i] == ')')
+				postfix += " ";
+				elem = st.pop();
+				while (Priority(elem) >= Priority(src[i]))
 				{
-					while (st_c.peek() != '(' && st_c.peek() != 's' && st_c.peek() != 'c' && st_c.peek() != 'l' && st_c.peek() != 'e')
-					{
-						char a = st_c.pop();
-						postfix += ' ';
-						postfix += a;
-					}
-					if (st_c.peek() == '(')
-						st_c.pop();
-					else
-					{
-						char a = st_c.pop();
-						postfix += ' ';
-						postfix += a;
-					}
+					postfix += elem;
+					elem = st.pop();
+				}
+				st.push(elem);
+				st.push(src[i]);
+			}
+			else
+				if (src[i] == '(')
+				{
+					st.push(src[i]);
 				}
 				else
-				{
-					while (Priority(st_c.peek()) >= Priority(tmp[i]))
+					if (src[i] == ')')
 					{
-						char a = st_c.pop();
-						postfix += ' ';
-						postfix += a;
+						elem = st.pop();
+						while (elem != '(')
+						{
+							postfix += elem;
+							elem = st.pop();
+						}
 					}
-					st_c.push(tmp[i]);
-				}
-			}
+					else
+						if (src[i] >= '0' && src[i] <= '9')
+						{
+							postfix += src[i];
+						}
+			i++;
 		}
 	}
-	if (!st_c.IsEmpty())
-		throw 0;
-}
-double Calculator::res()
-{
-	ToPostfix();
-	st_c.clear();
-	st_d.clear();
-	for (int i = 0; i < postfix.size(); i++)
+	//Вычисление выражения по постфиксной форме
+	double CalcPostfix()
 	{
-		double a, b;
-		switch (postfix[i])
+		unsigned int i = 0;
+		int tmp2 = 0;
+		st2.clear();
+		while (i < postfix.size())
 		{
-		case'+': a = st_d.pop(); b = st_d.pop();
-			st_d.push(a + b);
-			break;
-		case'-': a = st_d.pop(); b = st_d.pop();
-			st_d.push(b - a);
-			break;
-		case'*': a = st_d.pop(); b = st_d.pop();
-			st_d.push(b * a);
-			break;
-		case'/': a = st_d.pop(); b = st_d.pop();
-			st_d.push(b / a);
-			break;
-		case'^': a = st_d.pop(); b = st_d.pop();
-			st_d.push(pow(b, a));
-			break;
-		case's': a = st_d.pop(); st_d.push(sin(a));
-			break;
-		case'c': a = st_d.pop(); st_d.push(cos(a));
-			break;
-		case'e': a = st_d.pop(); st_d.push(exp(a));
-			break;
-		case'l': a = st_d.pop(); st_d.push(log(a));
-			break;
-		default:
-			if (postfix[i] != ' ')
+			if (postfix[i] == '+' || postfix[i] == '-' || postfix[i] == '*' || postfix[i] == '/' || postfix[i] == '^')
 			{
-				unsigned int k = i, point = 0, flag = 0;;
-				while (postfix[k] != ' ' && k != postfix.size())
+				double k2 = st2.pop();
+				double k1 = st2.pop();
+				switch (postfix[i])
 				{
-					if (postfix[k] == '.')
-					{
-						point = k;
-						flag = 1;
-					}
-					k++;
+				case '+': {st2.push(k1 + k2); break; }
+				case '-': {st2.push(k1 - k2); break; }
+				case '*': {st2.push(k1 * k2); break; }
+				case '/': {st2.push(k1 / k2); break; }
 				}
-				unsigned int delta = k - i - flag;
-				if (flag == 1)
-					point = k - point - flag;
-				k = i;
-				double z = 0;
-				while (postfix[k] != ' ' && k != postfix.size())
-				{
-					if (postfix[k] != '.')
-					{
-						delta--;
-						z += (postfix[k] - '0') * pow(10, delta);
-					}
-					k++;
-				}
-				if (flag == 1)
-					z /= pow(10, point);
-				st_d.push(z);
-				i = k;
 			}
-			break;
-		}
-	}
-	if (st_d.GetCount() != 1)
-		throw 0;
 
-	return st_d.pop();
-}
+			if (postfix[i] >= '0' && postfix[i] <= '9')
+			{
+				double tmp = atoi(&postfix[i]);// = перевести символ в число
+				st2.push(tmp);
+				tmp2 = to_string((int)tmp).length();
+			}
+			i += tmp2;
+			tmp2 = 1;
+		}
+
+		return st2.peek();
+	}
+	//Вычисление выражения за 1 проход по инфиксной форме  
+	double Calc()
+	{
+		if (!CheckBrackets())
+			throw -1;
+		ToPostfix();
+		return CalcPostfix();
+	}
+
+	bool CheckBrackets()
+	{
+		st.clear();
+		for (int i = 0; i < infix.size(); i++)
+		{
+			if (infix[i] == '(')
+				st.push(infix[i]);
+			if (infix[i] == ')')
+			{
+				if (st.IsEmpty() == true)
+					return false;
+				st.pop();
+			}
+		}
+		return st.IsEmpty();
+	}
+};

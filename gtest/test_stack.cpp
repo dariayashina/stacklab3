@@ -1,5 +1,5 @@
 #include "gtest.h"
-#include "../Stack/Stack.h"
+#include "../App/Stack.h"
 
 TEST(stack, can_create_default_stack)
 {
